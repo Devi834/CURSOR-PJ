@@ -1,0 +1,7 @@
+Create an HTML + JavaScript game using Kaboom.js
+I want to build a simple toddler game in the browser using Phaser.js. 
+The player is a Spiderman logo at the bottom that moves left and right using arrow keys. 
+Letters A-Z fall from the top. When the player catches a letter, 
+the game says something like "A for Apple" and shows an apple image. 
+I want to use basic HTML, CSS, and JavaScript with Phaser. 
+Can you help me build the first part: showing the player and dropping a letter from the top?
