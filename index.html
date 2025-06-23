@@ -36,6 +36,16 @@
             margin-bottom: 20px;
             font-size: 1.1em;
         }
+        .controls-info {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-top: 15px;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -43,6 +53,11 @@
         <h1 class="game-title">🎮 Toddler Letter Game 🎮</h1>
         <p class="instructions">Use ← → arrow keys to move the red bar and catch falling letters!</p>
         <div id="game-container"></div>
+        <div class="controls-info">
+            <span>Use ↑/↓ for Speed</span>
+            <span>'P' to Pause</span>
+            <span>Score 300 to Win!</span>
+        </div>
     </div>
     
     <!-- Phaser.js CDN -->

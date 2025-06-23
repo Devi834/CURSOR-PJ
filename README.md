@@ -16,8 +16,8 @@ When you catch a letter, the phrase (e.g., "A for Apple") is spoken out loud and
 
 -   🎯 **Simple Controls:** Move left/right, change speed, and pause.
 -   🔤 **Letters A-Z** that fall from the top of the screen.
--   🔊 **Audio Feedback:** Letters are spoken aloud when caught.
--   📊 **Score Tracking** and **Game Over/Restart** functionality.
+-   🔊 **Audio Feedback:** Full phrases like "A for Apple" are spoken.
+-   �� **Score Tracking** and **Game Over/Restart** functionality.
 -    adjustable **Falling Speed** for different skill levels.
 
 ## Technical Details
@@ -32,4 +32,8 @@ When you catch a letter, the phrase (e.g., "A for Apple") is spoken out loud and
 -   `game.js` - All the game logic using Phaser.js.
 -   `README.md` - This documentation file.
 
-Enjoy learning with your toddler! 🎉 
+Enjoy learning with your toddler! 🎉
+-   🔊 **Audio Feedback:** Full phrases like "A for Apple" are spoken.
+-   🏆 **Win Condition:** Reach 300 points to win the game with a confetti celebration!
+-   📊 **Score Tracking** and **Game Over/Restart** functionality.
+-   Speed Controls adjustable **Falling Speed** for different skill levels. 

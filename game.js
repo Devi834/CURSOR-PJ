@@ -63,6 +63,15 @@ function preload() {
     letterGraphics.fillRect(0, 0, 40, 40);
     letterGraphics.generateTexture('letter-bg', 40, 40);
     letterGraphics.destroy();
+
+    // Create textures for confetti particles
+    const colors = [0xffd700, 0xffffff, 0x00ff00, 0x00ffff, 0xff00ff];
+    colors.forEach((color, i) => {
+        const particleGraphics = this.make.graphics({ fillStyle: { color: color } });
+        particleGraphics.fillRect(0, 0, 10, 10);
+        particleGraphics.generateTexture(`p${i}`, 10, 10);
+        particleGraphics.destroy();
+    });
 }
 
 function create() {
@@ -73,7 +82,7 @@ function create() {
     this.textBg = null; // To hold the background for the text
 
     // Create player
-    player = this.physics.add.sprite(400, 560, 'player');
+    player = this.physics.add.sprite(400, 530, 'player');
     player.setCollideWorldBounds(true);
     player.setImmovable(true); // Player shouldn't be moved by physics
 
@@ -82,6 +91,8 @@ function create() {
 
     // Setup collision between player and letters
     this.physics.add.collider(player, letters, (player, letterContainer) => {
+        if (gameOver) return; // Stop processing if game is already over/won
+
         const caughtLetter = letterContainer.letter;
         score += 10;
         scoreText.setText('Score: ' + score);
@@ -91,6 +102,14 @@ function create() {
         speakPhrase(caughtLetter, word); // Speak the full phrase
 
         letterContainer.destroy();
+
+        // Check for win condition
+        if (score >= 300) {
+            triggerWin.call(this);
+        } else {
+            // Spawn the next letter after a 6-second delay
+            this.time.delayedCall(6000, spawnLetter, [], this);
+        }
     });
 
     // Setup keyboard controls
@@ -110,29 +129,24 @@ function create() {
         fontStyle: 'bold',
     });
 
-    // Spawn a new letter every 1.5 seconds
-    this.letterSpawnTimer = this.time.addEvent({
-        delay: 1500,
-        callback: spawnLetter,
-        callbackScope: this,
-        loop: true,
-    });
+    // Spawn the first letter to begin the game
+    spawnLetter.call(this);
 
     // Add pause key listener
     this.input.keyboard.on('keydown-P', togglePause, this);
 
     // Add speed control listeners
     this.input.keyboard.on('keydown-UP', () => {
-        if (letterSpeed < 5) {
-            letterSpeed += 1;
-            speedText.setText(`Speed: ${letterSpeed}x`);
-        }
+        if (gameOver || letterSpeed >= 5) return;
+        letterSpeed += 0.5;
+        speedText.setText(`Speed: ${letterSpeed}x`);
+        updateExistingLetterSpeeds.call(this);
     });
     this.input.keyboard.on('keydown-DOWN', () => {
-        if (letterSpeed > 1) {
-            letterSpeed -= 1;
-            speedText.setText(`Speed: ${letterSpeed}x`);
-        }
+        if (gameOver || letterSpeed <= 0.5) return;
+        letterSpeed -= 0.5;
+        speedText.setText(`Speed: ${letterSpeed}x`);
+        updateExistingLetterSpeeds.call(this);
     });
 
     // Listen for letters hitting the bottom of the screen
@@ -188,7 +202,10 @@ function spawnLetter() {
     letters.add(letterContainer);
 
     // Set a random velocity for the falling letter, adjusted by speed control
-    letterContainer.body.velocity.y = Phaser.Math.Between(40, 100) * letterSpeed;
+    // The base speed is now the slowest yet.
+    const baseSpeed = Phaser.Math.Between(10, 30);
+    letterContainer.body.velocity.y = baseSpeed * letterSpeed;
+    letterContainer.baseSpeed = baseSpeed; // Store base speed for later adjustments
     letterContainer.body.setCollideWorldBounds(true);
     letterContainer.body.onWorldBounds = true; // Enable world bounds collision event
     
@@ -206,7 +223,6 @@ function triggerGameOver() {
     }
     gameOver = true;
     this.physics.pause();
-    this.letterSpawnTimer.remove();
 
     gameOverText = this.add.text(config.width / 2, config.height / 2 - 50, 'Game Over', {
         fontSize: '64px',
@@ -226,6 +242,17 @@ function triggerGameOver() {
 }
 
 // --- New Functions ---
+
+/**
+ * Updates the speed of all letters currently on screen.
+ */
+function updateExistingLetterSpeeds() {
+    letters.getChildren().forEach(letter => {
+        if (letter.active) {
+            letter.body.velocity.y = letter.baseSpeed * letterSpeed;
+        }
+    });
+}
 
 /**
  * Uses the Web Speech API to say a phrase out loud.
@@ -248,9 +275,7 @@ function speakPhrase(letter, word) {
  * Toggles the pause state of the game.
  */
 function togglePause() {
-    if (gameOver) {
-        return;
-    }
+    if (gameOver) return;
     isPaused = !isPaused;
     if (isPaused) {
         this.physics.pause();
@@ -305,7 +330,7 @@ function displayTextForLetter(word, letter) {
     this.currentText.setDepth(1);
     this.textBg.setDepth(0);
 
-    this.time.delayedCall(2000, () => {
+    this.time.delayedCall(5000, () => {
         if (this.currentText && this.currentText.active) {
             this.currentText.destroy();
             this.currentText = null;
@@ -315,4 +340,44 @@ function displayTextForLetter(word, letter) {
             this.textBg = null;
         }
     }, [], this);
+}
+
+function triggerWin() {
+    if (gameOver) return; // Don't trigger if game is already over
+    gameOver = true;
+    this.physics.pause();
+
+    // Display "You Win!" text
+    this.add.text(config.width / 2, config.height / 2 - 50, 'You Win!', {
+        fontSize: '80px',
+        fill: '#FFD700',
+        fontStyle: 'bold',
+        stroke: '#000000',
+        strokeThickness: 8
+    }).setOrigin(0.5);
+
+    // Display restart text
+    this.add.text(config.width / 2, config.height / 2 + 50, 'Press Space to Play Again', {
+        fontSize: '32px',
+        fill: '#ffffff'
+    }).setOrigin(0.5);
+
+    // Create confetti emitter
+    this.add.particles(0, 0, 'p0', {
+        x: config.width / 2,
+        y: -10,
+        angle: { min: 10, max: 170 },
+        speed: 300,
+        gravityY: 200,
+        lifespan: 4000,
+        quantity: 3,
+        scale: { start: 1, end: 0.2 },
+        blendMode: 'ADD',
+        texture: [ 'p0', 'p1', 'p2', 'p3', 'p4' ]
+    });
+
+    this.input.keyboard.once('keydown-SPACE', () => {
+        score = 0;
+        this.scene.restart();
+    });
 } 
