@@ -31,6 +31,7 @@ let restartText;
 // New variables for pause and image display
 let isPaused = false;
 let pauseText;
+let pauseOverlay;
 
 // New variables for speed control
 let letterSpeed = 1;
@@ -276,18 +277,31 @@ function speakPhrase(letter, word) {
  */
 function togglePause() {
     if (gameOver) return;
+
     isPaused = !isPaused;
     if (isPaused) {
         this.physics.pause();
-        this.letterSpawnTimer.paused = true;
+        this.time.paused = true; // This correctly pauses all timers
+
+        // Create a semi-transparent overlay
+        pauseOverlay = this.add.graphics({ fillStyle: { color: 0x000000, alpha: 0.7 } });
+        pauseOverlay.fillRect(0, 0, config.width, config.height);
+        pauseOverlay.setDepth(5); // Ensure it's on top of other game elements
+
         pauseText = this.add.text(config.width / 2, config.height / 2, 'Paused', {
             fontSize: '64px',
             fill: '#FFFFFF',
             fontStyle: 'bold'
-        }).setOrigin(0.5);
+        }).setOrigin(0.5).setDepth(6); // Ensure text is on top of the overlay
+
     } else {
         this.physics.resume();
-        this.letterSpawnTimer.paused = false;
+        this.time.paused = false;
+
+        // Remove the overlay and text
+        if (pauseOverlay) {
+            pauseOverlay.destroy();
+        }
         if (pauseText) {
             pauseText.destroy();
         }
